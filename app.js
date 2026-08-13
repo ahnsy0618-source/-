@@ -11,16 +11,16 @@ const DEPT_TARGETS = {
   "IB2부문": { 분기목표: 335, 연목표: 1340 },
 };
 
-// 부서별 과거 실적(억원): 1분기 총, 2분기 총, 7월 총, 8월 일별(최근 포함) — 샘플 데모용
+// 부서별 과거 실적(억원): 1분기 총, 2분기 총, 7월 총, 8월 주간(월요일 기준, 최근주 포함) — 샘플 데모용
 const DEPT_HISTORY_SEED = {
-  "WM부문 1본부": { q1: 530, q2: 545, jul: 180, aug: [["2026-08-01", 44], ["2026-08-04", 45], ["2026-08-08", 43], ["2026-08-13", 46]] },
-  "WM부문 2본부": { q1: 450, q2: 470, jul: 150, aug: [["2026-08-01", 36], ["2026-08-04", 38], ["2026-08-08", 35], ["2026-08-13", 39]] },
-  "WM부문 3본부": { q1: 365, q2: 355, jul: 120, aug: [["2026-08-01", 29], ["2026-08-04", 30], ["2026-08-08", 28], ["2026-08-13", 31]] },
-  "WM부문 4본부": { q1: 280, q2: 295, jul: 95, aug: [["2026-08-01", 23], ["2026-08-04", 24], ["2026-08-08", 22], ["2026-08-13", 25]] },
-  "디지털&연금부문": { q1: 178, q2: 182, jul: 60, aug: [["2026-08-01", 14], ["2026-08-04", 15], ["2026-08-08", 14], ["2026-08-13", 16]] },
-  "S&T부문": { q1: 615, q2: 680, jul: 210, aug: [["2026-08-01", 50], ["2026-08-04", 52], ["2026-08-08", 49], ["2026-08-13", 54]] },
-  "IB1부문": { q1: 390, q2: 410, jul: 130, aug: [["2026-08-01", 31], ["2026-08-04", 32], ["2026-08-08", 30], ["2026-08-13", 34]] },
-  "IB2부문": { q1: 328, q2: 335, jul: 110, aug: [["2026-08-01", 26], ["2026-08-04", 27], ["2026-08-08", 25], ["2026-08-13", 29]] },
+  "WM부문 1본부": { q1: 530, q2: 545, jul: 180, weeks: [["2026-08-03", 87], ["2026-08-10", 91]] },
+  "WM부문 2본부": { q1: 450, q2: 470, jul: 150, weeks: [["2026-08-03", 72], ["2026-08-10", 76]] },
+  "WM부문 3본부": { q1: 365, q2: 355, jul: 120, weeks: [["2026-08-03", 57], ["2026-08-10", 61]] },
+  "WM부문 4본부": { q1: 280, q2: 295, jul: 95, weeks: [["2026-08-03", 46], ["2026-08-10", 48]] },
+  "디지털&연금부문": { q1: 178, q2: 182, jul: 60, weeks: [["2026-08-03", 29], ["2026-08-10", 30]] },
+  "S&T부문": { q1: 615, q2: 680, jul: 210, weeks: [["2026-08-03", 100], ["2026-08-10", 105]] },
+  "IB1부문": { q1: 390, q2: 410, jul: 130, weeks: [["2026-08-03", 62], ["2026-08-10", 65]] },
+  "IB2부문": { q1: 328, q2: 335, jul: 110, weeks: [["2026-08-03", 52], ["2026-08-10", 55]] },
 };
 
 function buildSampleHistory() {
@@ -29,7 +29,7 @@ function buildSampleHistory() {
     rows.push({ 부서, 날짜: "2026-03-31", "실적(억원)": d.q1 });
     rows.push({ 부서, 날짜: "2026-06-30", "실적(억원)": d.q2 });
     rows.push({ 부서, 날짜: "2026-07-31", "실적(억원)": d.jul });
-    d.aug.forEach(([날짜, 값]) => rows.push({ 부서, 날짜, "실적(억원)": 값 }));
+    d.weeks.forEach(([날짜, 값]) => rows.push({ 부서, 날짜, "실적(억원)": 값 }));
   });
   return rows;
 }
@@ -104,6 +104,20 @@ function todayStr() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+function addDays(dateStr, n) {
+  const d = new Date(`${dateStr}T00:00:00`);
+  d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// 해당 날짜가 속한 주의 월요일 날짜를 반환 (주간 업데이트 버킷 키)
+function mondayOf(dateStr) {
+  const d = new Date(`${dateStr}T00:00:00`);
+  const day = d.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  return addDays(dateStr, diffToMonday);
+}
+
 function quarterOf(dateStr) {
   const month = Number(dateStr.slice(5, 7));
   return Math.floor((month - 1) / 3) + 1;
@@ -171,8 +185,8 @@ function handleFiles(fileList) {
   const files = Array.from(fileList);
   if (!files.length) return;
   let pending = files.length;
-  const today = todayStr();
-  state.history = state.history.filter((r) => r.날짜 !== today);
+  const weekKey = mondayOf(todayStr());
+  state.history = state.history.filter((r) => r.날짜 !== weekKey);
 
   files.forEach((file) => {
     const reader = new FileReader();
@@ -185,7 +199,7 @@ function handleFiles(fileList) {
           const 부서 = row["부서"];
           const 실적컬럼 = Object.keys(row).find((k) => k !== "부서" && k !== "날짜" && isNumericValue(row[k]));
           if (!부서 || !실적컬럼) return;
-          state.history.push({ 부서, 날짜: today, "실적(억원)": toNumber(row[실적컬럼]) });
+          state.history.push({ 부서, 날짜: weekKey, "실적(억원)": toNumber(row[실적컬럼]) });
         });
       } catch (err) {
         alert(`${file.name} 파일을 읽는 중 오류가 발생했습니다: ${err.message}`);
@@ -211,13 +225,26 @@ function sumByDept(rows) {
 
 function renderStatus() {
   const today = todayStr();
-  const todayCount = state.history.filter((r) => r.날짜 === today).length;
+  const thisWeek = mondayOf(today);
+  const nextWeek = addDays(thisWeek, 7);
+  const weekCount = state.history.filter((r) => r.날짜 === thisWeek).length;
   statusEl.textContent = state.history.length
-    ? `누적 ${state.history.length}건 저장됨 · 오늘(${today}) 입력 ${todayCount}건`
+    ? `누적 ${state.history.length}건 저장됨 · 이번 주(${thisWeek} 월요일) 입력 ${weekCount}건`
     : "아직 업로드된 데이터가 없습니다.";
-  document.getElementById("updatedAt").textContent = state.history.length
-    ? `${today} 기준으로 업데이트됨`
-    : "데이터를 업로드하면 시작됩니다";
+
+  const updatedAtEl = document.getElementById("updatedAt");
+  if (!state.history.length) {
+    updatedAtEl.textContent = "데이터를 업로드하면 시작됩니다";
+    updatedAtEl.classList.remove("stale");
+    return;
+  }
+  const latest = latestDate();
+  const daysStale = daysInclusive(latest, today) - 1;
+  const isStale = daysStale > 10;
+  updatedAtEl.textContent = isStale
+    ? `⚠ 업데이트 지연 · 마지막 입력 ${latest} (${daysStale}일 전) · 다음 업데이트 예정 ${nextWeek}(월) 오전 7시`
+    : `${latest} 기준 · 다음 업데이트 예정 ${nextWeek}(월) 오전 7시`;
+  updatedAtEl.classList.toggle("stale", isStale);
 }
 
 function latestDate() {
@@ -244,7 +271,9 @@ function deptListHtml(rows, { withMeter } = {}) {
 function renderToday() {
   const latest = latestDate();
   const label = latest || todayStr();
-  document.getElementById("todayLabel").textContent = latest ? `${latest} 기준 (가장 최근 입력)` : "아직 입력된 데이터가 없습니다";
+  document.getElementById("todayLabel").textContent = latest
+    ? `${latest}(월) 기준 · 이번 주 실적`
+    : "아직 입력된 데이터가 없습니다";
 
   const rows = state.history.filter((r) => r.날짜 === latest);
   const byDept = Array.from(sumByDept(rows).entries()).map(([부서, actual]) => ({ 부서, actual }));

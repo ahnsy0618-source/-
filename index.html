@@ -16,7 +16,7 @@
 
   <section class="stats-grid">
     <div class="stat-tile">
-      <p class="stat-label">최근 실적</p>
+      <p class="stat-label">이번 주 실적</p>
       <p class="stat-value" id="statTodayValue">-</p>
       <p class="stat-sub" id="statTodaySub">데이터 없음</p>
     </div>
@@ -35,7 +35,7 @@
   <section class="card upload-card">
     <div id="dropZone" class="dropzone">
       <p class="dropzone-text">엑셀 / CSV 파일을 끌어다 놓거나 클릭해서 올리세요</p>
-      <p class="dropzone-hint">오늘 날짜로 반영 · 같은 날 다시 올리면 덮어씁니다</p>
+      <p class="dropzone-hint">매주 월요일 오전 7시 기준 · 이번 주로 반영되고, 같은 주에 다시 올리면 덮어씁니다</p>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple hidden />
     </div>
     <div class="controls">
@@ -46,7 +46,7 @@
   </section>
 
   <nav class="tabs" id="tabs">
-    <button class="tab active" data-tab="today">최근</button>
+    <button class="tab active" data-tab="today">이번 주</button>
     <button class="tab" data-tab="quarter">분기</button>
     <button class="tab" data-tab="year">연누적</button>
   </nav>

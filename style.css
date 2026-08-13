@@ -56,6 +56,10 @@ body {
   color: var(--text-secondary);
 }
 
+.header h1.stale {
+  color: var(--critical);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
