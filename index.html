@@ -11,13 +11,13 @@
 
   <header class="header">
     <h1>실적집계 대시보드</h1>
-    <p class="subtitle">부서별 실적 파일을 올리면 자동으로 취합해서 보여줍니다 · 프로토타입</p>
+    <p class="subtitle">매일 부서별 실적 파일을 올리면 오늘 · 분기 · 연누적에 자동으로 쌓입니다 · 프로토타입</p>
   </header>
 
   <section class="card">
     <div id="dropZone" class="dropzone">
       <p class="dropzone-text">엑셀(.xlsx, .xls) / CSV 파일을 여기로 끌어다 놓거나 클릭해서 선택하세요</p>
-      <p class="dropzone-hint">여러 부서 파일을 한 번에 올려도 됩니다</p>
+      <p class="dropzone-hint">오늘 날짜로 반영됩니다 · 같은 날 다시 올리면 오늘 값은 덮어씁니다</p>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple hidden />
     </div>
     <div class="controls">
@@ -28,14 +28,25 @@
   </section>
 
   <section class="card">
-    <h2 class="card-title">업로드된 파일</h2>
-    <ul id="fileList" class="file-list"></ul>
+    <h2 class="card-title">오늘 실적</h2>
+    <p id="todayLabel" class="card-hint"></p>
+    <div id="todayTable" class="table-wrap">
+      <p class="empty">표시할 데이터가 없습니다.</p>
+    </div>
   </section>
 
   <section class="card">
-    <h2 class="card-title">취합 결과</h2>
-    <p class="card-hint">첫 번째 열을 기준으로 그룹핑하고, 숫자 열은 합계로 취합합니다.</p>
-    <div id="resultTable" class="table-wrap">
+    <h2 class="card-title">분기 실적</h2>
+    <p id="quarterLabel" class="card-hint"></p>
+    <div id="quarterTable" class="table-wrap">
+      <p class="empty">표시할 데이터가 없습니다.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="card-title">올해 누적 vs 목표 &amp; 전분기</h2>
+    <p id="yearLabel" class="card-hint"></p>
+    <div id="yearTable" class="table-wrap">
       <p class="empty">표시할 데이터가 없습니다.</p>
     </div>
   </section>
