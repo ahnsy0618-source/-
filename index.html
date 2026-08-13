@@ -3,52 +3,67 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>실적집계 대시보드 (프로토타입)</title>
+<title>실적집계 대시보드</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <div class="page">
 
   <header class="header">
-    <h1>실적집계 대시보드</h1>
-    <p class="subtitle">매일 부서별 실적 파일을 올리면 오늘 · 분기 · 연누적에 자동으로 쌓입니다 · 프로토타입</p>
+    <p class="eyebrow">실적집계 대시보드</p>
+    <h1 id="updatedAt">불러오는 중…</h1>
   </header>
 
-  <section class="card">
+  <section class="stats-grid">
+    <div class="stat-tile">
+      <p class="stat-label">최근 실적</p>
+      <p class="stat-value" id="statTodayValue">-</p>
+      <p class="stat-sub" id="statTodaySub">데이터 없음</p>
+    </div>
+    <div class="stat-tile">
+      <p class="stat-label">분기 달성률</p>
+      <p class="stat-value" id="statQuarterValue">-</p>
+      <p class="stat-sub" id="statQuarterSub">데이터 없음</p>
+    </div>
+    <div class="stat-tile">
+      <p class="stat-label">연간 달성률</p>
+      <p class="stat-value" id="statYearValue">-</p>
+      <p class="stat-sub" id="statYearSub">데이터 없음</p>
+    </div>
+  </section>
+
+  <section class="card upload-card">
     <div id="dropZone" class="dropzone">
-      <p class="dropzone-text">엑셀(.xlsx, .xls) / CSV 파일을 여기로 끌어다 놓거나 클릭해서 선택하세요</p>
-      <p class="dropzone-hint">오늘 날짜로 반영됩니다 · 같은 날 다시 올리면 오늘 값은 덮어씁니다</p>
+      <p class="dropzone-text">엑셀 / CSV 파일을 끌어다 놓거나 클릭해서 올리세요</p>
+      <p class="dropzone-hint">오늘 날짜로 반영 · 같은 날 다시 올리면 덮어씁니다</p>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple hidden />
     </div>
     <div class="controls">
-      <button id="sampleBtn" type="button" class="btn btn-secondary">샘플 데이터로 보기</button>
+      <button id="sampleBtn" type="button" class="btn btn-primary">샘플 데이터로 보기</button>
       <button id="resetBtn" type="button" class="btn btn-ghost">초기화</button>
     </div>
     <p id="status" class="status">아직 업로드된 데이터가 없습니다.</p>
   </section>
 
-  <section class="card">
-    <h2 class="card-title">오늘 실적</h2>
-    <p id="todayLabel" class="card-hint"></p>
-    <div id="todayTable" class="table-wrap">
-      <p class="empty">표시할 데이터가 없습니다.</p>
-    </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="today">최근</button>
+    <button class="tab" data-tab="quarter">분기</button>
+    <button class="tab" data-tab="year">연누적</button>
+  </nav>
+
+  <section class="card panel" id="panel-today">
+    <p class="panel-label" id="todayLabel"></p>
+    <div id="todayList" class="dept-list"></div>
   </section>
 
-  <section class="card">
-    <h2 class="card-title">분기 실적</h2>
-    <p id="quarterLabel" class="card-hint"></p>
-    <div id="quarterTable" class="table-wrap">
-      <p class="empty">표시할 데이터가 없습니다.</p>
-    </div>
+  <section class="card panel" id="panel-quarter" hidden>
+    <p class="panel-label" id="quarterLabel"></p>
+    <div id="quarterList" class="dept-list"></div>
   </section>
 
-  <section class="card">
-    <h2 class="card-title">올해 누적 vs 목표 &amp; 전분기</h2>
-    <p id="yearLabel" class="card-hint"></p>
-    <div id="yearTable" class="table-wrap">
-      <p class="empty">표시할 데이터가 없습니다.</p>
-    </div>
+  <section class="card panel" id="panel-year" hidden>
+    <p class="panel-label" id="yearLabel"></p>
+    <div id="yearList" class="dept-list"></div>
   </section>
 
 </div>

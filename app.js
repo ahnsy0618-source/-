@@ -11,7 +11,7 @@ const DEPT_TARGETS = {
   "IB2부문": { 분기목표: 335, 연목표: 1340 },
 };
 
-// 부서별 과거 실적(억원): 1분기 총, 2분기 총, 7월 총, 8월 일별(오늘 포함) — 샘플 데모용
+// 부서별 과거 실적(억원): 1분기 총, 2분기 총, 7월 총, 8월 일별(최근 포함) — 샘플 데모용
 const DEPT_HISTORY_SEED = {
   "WM부문 1본부": { q1: 530, q2: 545, jul: 180, aug: [["2026-08-01", 44], ["2026-08-04", 45], ["2026-08-08", 43], ["2026-08-13", 46]] },
   "WM부문 2본부": { q1: 450, q2: 470, jul: 150, aug: [["2026-08-01", 36], ["2026-08-04", 38], ["2026-08-08", 35], ["2026-08-13", 39]] },
@@ -72,6 +72,15 @@ resetBtn.addEventListener("click", () => {
   fileInput.value = "";
   saveHistory();
   renderAll();
+});
+
+document.querySelectorAll(".tab").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach((p) => (p.hidden = true));
+    btn.classList.add("active");
+    document.getElementById(`panel-${btn.dataset.tab}`).hidden = false;
+  });
 });
 
 function loadHistory() {
@@ -142,20 +151,20 @@ function escapeHtml(s) {
   );
 }
 
-function achievementBadge(actual, target) {
-  if (!target) return "-";
-  const pct = Math.round((actual / target) * 100);
-  const status = pct >= 100 ? "good" : "critical";
-  const arrow = pct >= 100 ? "▲" : "▼";
-  return `<span class="badge badge-${status}">${arrow} ${pct}%</span>`;
+function pct(actual, target) {
+  return target ? Math.round((actual / target) * 100) : null;
 }
 
-function deltaBadge(current, previous) {
-  const diff = Math.round(current - previous);
-  const status = diff >= 0 ? "good" : "critical";
-  const arrow = diff >= 0 ? "▲" : "▼";
-  const sign = diff >= 0 ? "+" : "";
-  return `<span class="badge badge-${status}">${arrow} ${sign}${formatNumber(diff)}</span>`;
+function badgeHtml(value, isGood) {
+  const status = isGood ? "good" : "critical";
+  const arrow = isGood ? "▲" : "▼";
+  return `<span class="badge badge-${status}">${arrow} ${value}</span>`;
+}
+
+function meterHtml(actual, target) {
+  const p = target ? Math.min((actual / target) * 100, 100) : 0;
+  const status = actual >= target ? "good" : "critical";
+  return `<div class="meter"><div class="meter-fill ${status}" style="width:${p}%"></div></div>`;
 }
 
 function handleFiles(fileList) {
@@ -206,23 +215,44 @@ function renderStatus() {
   statusEl.textContent = state.history.length
     ? `누적 ${state.history.length}건 저장됨 · 오늘(${today}) 입력 ${todayCount}건`
     : "아직 업로드된 데이터가 없습니다.";
+  document.getElementById("updatedAt").textContent = state.history.length
+    ? `${today} 기준으로 업데이트됨`
+    : "데이터를 업로드하면 시작됩니다";
+}
+
+function latestDate() {
+  return state.history.reduce((max, r) => (r.날짜 > max ? r.날짜 : max), "");
+}
+
+function deptListHtml(rows, { withMeter } = {}) {
+  if (!rows.length) return `<p class="empty">표시할 데이터가 없습니다.</p>`;
+  return rows
+    .map((r) => {
+      const meter = withMeter ? meterHtml(r.actual, r.target) : "";
+      const foot = withMeter
+        ? `<div class="dept-row-foot">${badgeHtml(`${pct(r.actual, r.target)}%`, r.actual >= r.target)}<span class="dept-target">목표 ${formatNumber(r.target)}억</span></div>`
+        : "";
+      return `<div class="dept-row">
+        <div class="dept-row-head"><span class="dept-name">${escapeHtml(r.부서)}</span><span class="dept-value">${formatNumber(r.actual)}<span class="unit">억원</span></span></div>
+        ${meter}
+        ${foot}
+      </div>`;
+    })
+    .join("");
 }
 
 function renderToday() {
-  const today = todayStr();
-  document.getElementById("todayLabel").textContent = `${today} 기준`;
-  const rows = state.history.filter((r) => r.날짜 === today);
-  const container = document.getElementById("todayTable");
-  if (!rows.length) {
-    container.innerHTML = `<p class="empty">오늘자 데이터가 아직 없습니다. 파일을 업로드해주세요.</p>`;
-    return;
-  }
-  const byDept = sumByDept(rows);
-  const total = Array.from(byDept.values()).reduce((s, v) => s + v, 0);
-  const body = Array.from(byDept.entries())
-    .map(([부서, v]) => `<tr><td>${escapeHtml(부서)}</td><td class="num">${formatNumber(v)}</td></tr>`)
-    .join("");
-  container.innerHTML = `<table><thead><tr><th>부서</th><th class="num">오늘 실적(억원)</th></tr></thead><tbody>${body}</tbody><tfoot><tr><td>합계</td><td class="num">${formatNumber(total)}</td></tr></tfoot></table>`;
+  const latest = latestDate();
+  const label = latest || todayStr();
+  document.getElementById("todayLabel").textContent = latest ? `${latest} 기준 (가장 최근 입력)` : "아직 입력된 데이터가 없습니다";
+
+  const rows = state.history.filter((r) => r.날짜 === latest);
+  const byDept = Array.from(sumByDept(rows).entries()).map(([부서, actual]) => ({ 부서, actual }));
+  const total = byDept.reduce((s, r) => s + r.actual, 0);
+
+  document.getElementById("todayList").innerHTML = deptListHtml(byDept);
+  document.getElementById("statTodayValue").textContent = byDept.length ? `${formatNumber(total)}억` : "-";
+  document.getElementById("statTodaySub").textContent = byDept.length ? `${label} · ${byDept.length}개 부문` : "데이터 없음";
 }
 
 function renderQuarter() {
@@ -235,23 +265,19 @@ function renderQuarter() {
     `${year}년 ${q}분기 (${start} ~ ${end}, 오늘까지 누적) · 목표는 분기 진행률(${Math.round(paceRatio * 100)}%)에 맞춰 보정된 값`;
 
   const rows = state.history.filter((r) => r.날짜 >= start && r.날짜 <= end);
-  const container = document.getElementById("quarterTable");
-  if (!rows.length) {
-    container.innerHTML = `<p class="empty">이번 분기 데이터가 아직 없습니다.</p>`;
-    return;
-  }
-  const byDept = sumByDept(rows);
-  let totalActual = 0;
-  let totalTarget = 0;
-  const body = Array.from(byDept.entries())
-    .map(([부서, actual]) => {
-      const target = pacedTarget(DEPT_TARGETS[부서]?.분기목표 || 0, start, end, today);
-      totalActual += actual;
-      totalTarget += target;
-      return `<tr><td>${escapeHtml(부서)}</td><td class="num">${formatNumber(target)}</td><td class="num">${formatNumber(actual)}</td><td class="num">${achievementBadge(actual, target)}</td></tr>`;
-    })
-    .join("");
-  container.innerHTML = `<table><thead><tr><th>부서</th><th class="num">진행목표(억원)</th><th class="num">분기실적(억원)</th><th class="num">달성률</th></tr></thead><tbody>${body}</tbody><tfoot><tr><td>합계</td><td class="num">${formatNumber(totalTarget)}</td><td class="num">${formatNumber(totalActual)}</td><td class="num">${achievementBadge(totalActual, totalTarget)}</td></tr></tfoot></table>`;
+  const byDept = Array.from(sumByDept(rows).entries()).map(([부서, actual]) => ({
+    부서,
+    actual,
+    target: pacedTarget(DEPT_TARGETS[부서]?.분기목표 || 0, start, end, today),
+  }));
+  const totalActual = byDept.reduce((s, r) => s + r.actual, 0);
+  const totalTarget = byDept.reduce((s, r) => s + r.target, 0);
+
+  document.getElementById("quarterList").innerHTML = deptListHtml(byDept, { withMeter: true });
+  document.getElementById("statQuarterValue").textContent = byDept.length ? `${pct(totalActual, totalTarget)}%` : "-";
+  document.getElementById("statQuarterSub").textContent = byDept.length
+    ? `${formatNumber(totalActual)}억 / 진행목표 ${formatNumber(totalTarget)}억`
+    : "데이터 없음";
 }
 
 function renderYear() {
@@ -264,37 +290,41 @@ function renderYear() {
   const yearStart = `${year}-01-01`;
   const yearEnd = `${year}-12-31`;
   const yearPaceRatio = Math.min(daysInclusive(yearStart, today) / daysInclusive(yearStart, yearEnd), 1);
-  document.getElementById("yearLabel").innerHTML =
+  document.getElementById("yearLabel").textContent =
     `${yearStart} ~ ${today} 누적 · 목표는 연 진행률(${Math.round(yearPaceRatio * 100)}%)에 맞춰 보정된 값 · 전분기대비 = 이번 분기(진행중) 누적 vs ${prev.year}년 ${prev.q}분기 전체 실적`;
 
   const ytdRows = state.history.filter((r) => r.날짜.slice(0, 4) === String(year) && r.날짜 <= today);
-  const curQtdRows = state.history.filter((r) => r.날짜 >= curBounds.start && r.날짜 <= curBounds.end);
-  const prevRows = state.history.filter((r) => r.날짜 >= prevBounds.start && r.날짜 <= prevBounds.end);
-  const container = document.getElementById("yearTable");
-  if (!ytdRows.length) {
-    container.innerHTML = `<p class="empty">올해 누적 데이터가 아직 없습니다.</p>`;
-    return;
-  }
-  const ytdByDept = sumByDept(ytdRows);
-  const curQtdByDept = sumByDept(curQtdRows);
-  const prevByDept = sumByDept(prevRows);
-  let totalActual = 0;
-  let totalTarget = 0;
-  let totalCurQtd = 0;
-  let totalPrev = 0;
-  const body = Array.from(ytdByDept.entries())
-    .map(([부서, actual]) => {
-      const target = pacedTarget(DEPT_TARGETS[부서]?.연목표 || 0, yearStart, yearEnd, today);
-      const curQtd = curQtdByDept.get(부서) || 0;
-      const prevVal = prevByDept.get(부서) || 0;
-      totalActual += actual;
-      totalTarget += target;
-      totalCurQtd += curQtd;
-      totalPrev += prevVal;
-      return `<tr><td>${escapeHtml(부서)}</td><td class="num">${formatNumber(target)}</td><td class="num">${formatNumber(actual)}</td><td class="num">${achievementBadge(actual, target)}</td><td class="num">${formatNumber(prevVal)}</td><td class="num">${deltaBadge(curQtd, prevVal)}</td></tr>`;
-    })
-    .join("");
-  container.innerHTML = `<table><thead><tr><th>부서</th><th class="num">연진행목표(억원)</th><th class="num">연누적실적(억원)</th><th class="num">달성률</th><th class="num">전분기실적(억원)</th><th class="num">전분기대비</th></tr></thead><tbody>${body}</tbody><tfoot><tr><td>합계</td><td class="num">${formatNumber(totalTarget)}</td><td class="num">${formatNumber(totalActual)}</td><td class="num">${achievementBadge(totalActual, totalTarget)}</td><td class="num">${formatNumber(totalPrev)}</td><td class="num">${deltaBadge(totalCurQtd, totalPrev)}</td></tr></tfoot></table>`;
+  const curQtdByDept = sumByDept(state.history.filter((r) => r.날짜 >= curBounds.start && r.날짜 <= curBounds.end));
+  const prevByDept = sumByDept(state.history.filter((r) => r.날짜 >= prevBounds.start && r.날짜 <= prevBounds.end));
+
+  const byDept = Array.from(sumByDept(ytdRows).entries()).map(([부서, actual]) => ({
+    부서,
+    actual,
+    target: pacedTarget(DEPT_TARGETS[부서]?.연목표 || 0, yearStart, yearEnd, today),
+    curQtd: curQtdByDept.get(부서) || 0,
+    prevVal: prevByDept.get(부서) || 0,
+  }));
+  const totalActual = byDept.reduce((s, r) => s + r.actual, 0);
+  const totalTarget = byDept.reduce((s, r) => s + r.target, 0);
+
+  const list = byDept.length
+    ? byDept
+        .map((r) => {
+          const diff = Math.round(r.curQtd - r.prevVal);
+          return `<div class="dept-row">
+            <div class="dept-row-head"><span class="dept-name">${escapeHtml(r.부서)}</span><span class="dept-value">${formatNumber(r.actual)}<span class="unit">억원</span></span></div>
+            ${meterHtml(r.actual, r.target)}
+            <div class="dept-row-foot">${badgeHtml(`${pct(r.actual, r.target)}%`, r.actual >= r.target)}<span class="dept-target">전분기 ${formatNumber(r.prevVal)}억 · ${badgeHtml((diff >= 0 ? "+" : "") + formatNumber(diff), diff >= 0)}</span></div>
+          </div>`;
+        })
+        .join("")
+    : `<p class="empty">표시할 데이터가 없습니다.</p>`;
+
+  document.getElementById("yearList").innerHTML = list;
+  document.getElementById("statYearValue").textContent = byDept.length ? `${pct(totalActual, totalTarget)}%` : "-";
+  document.getElementById("statYearSub").textContent = byDept.length
+    ? `${formatNumber(totalActual)}억 / 진행목표 ${formatNumber(totalTarget)}억`
+    : "데이터 없음";
 }
 
 function renderAll() {
