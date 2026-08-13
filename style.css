@@ -45,12 +45,9 @@ body {
 }
 
 .brand-char {
-  width: 60px;
-  height: 60px;
-  border-radius: 18px;
-  object-fit: cover;
-  box-shadow: var(--shadow);
-  background: var(--surface-1);
+  height: 68px;
+  width: auto;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
@@ -348,9 +345,7 @@ body {
     padding: 14px 10px;
   }
   .brand-char {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    height: 52px;
   }
   .brand-name {
     font-size: 24px;
