@@ -348,54 +348,16 @@ function renderYear() {
             <div class="dept-row-head"><span class="dept-name">${escapeHtml(r.부서)}</span><span class="dept-value">${formatNumber(r.actual)}<span class="unit">억원</span></span></div>
             ${meterHtml(r.actual, r.target)}
             <div class="dept-row-foot">${badgeHtml(`${pct(r.actual, r.target)}%`, r.actual >= r.target)}<span class="dept-target">전분기 ${formatNumber(r.prevVal)}억 · ${badgeHtml((diff >= 0 ? "+" : "") + formatNumber(diff), diff >= 0)}</span></div>
-            <button class="ai-draft-btn" type="button" data-idx="${i}">AI 기획방안 초안 생성</button>
-            <div class="ai-draft" id="ai-draft-${i}" hidden></div>
           </div>`;
         })
         .join("")
     : `<p class="empty">표시할 데이터가 없습니다.</p>`;
 
   document.getElementById("yearList").innerHTML = list;
-  bindAiDraftButtons(byDept);
   document.getElementById("statYearValue").textContent = byDept.length ? `${pct(totalActual, totalTarget)}%` : "-";
   document.getElementById("statYearSub").textContent = byDept.length
     ? `${formatNumber(totalActual)}억 / 진행목표 ${formatNumber(totalTarget)}억`
     : "데이터 없음";
-}
-
-function bindAiDraftButtons(byDept) {
-  document.querySelectorAll(".ai-draft-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const r = byDept[Number(btn.dataset.idx)];
-      const resultEl = document.getElementById(`ai-draft-${btn.dataset.idx}`);
-      btn.disabled = true;
-      btn.textContent = "생성 중…";
-      resultEl.hidden = false;
-      resultEl.innerHTML = `<p class="empty">AI가 초안을 작성하고 있습니다…</p>`;
-      try {
-        const res = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            부서: r.부서,
-            actual: Math.round(r.actual),
-            target: Math.round(r.target),
-            achievementPct: pct(r.actual, r.target),
-            prevVal: Math.round(r.prevVal),
-            diff: Math.round(r.curQtd - r.prevVal),
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "생성 실패");
-        resultEl.innerHTML = `<div class="ai-draft-body">${escapeHtml(data.text).replace(/\n/g, "<br>")}</div>`;
-      } catch (err) {
-        resultEl.innerHTML = `<p class="empty">초안 생성에 실패했습니다: ${escapeHtml(err.message)}</p>`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "AI 기획방안 초안 생성";
-      }
-    });
-  });
 }
 
 function renderAll() {
@@ -405,16 +367,29 @@ function renderAll() {
   renderYear();
 }
 
-// 코스피/기준금리는 브라우저에서 직접 붙일 수 있는 무료 CORS API가 없어서 "기준일" 있는 참고값으로 고정.
-// 환율만 open.er-api.com(CORS 허용)으로 실시간 조회.
-const KOSPI_SNAPSHOT = { value: "6,257.45", asOf: "2026-08-03" };
+// 기준금리는 자주 안 바뀌고 브라우저에서 직접 붙일 무료 CORS API도 없어서 "기준일" 있는 참고값으로 고정.
+// 코스피는 /api/kospi(서버리스 함수)가 야후 파이낸스를 대신 호출해서 실시간으로 가져옴.
+// 환율은 open.er-api.com(CORS 허용)으로 실시간 조회.
 const BASE_RATE_SNAPSHOT = { value: "2.75%", asOf: "2026-07-16 결정" };
 
 async function loadMarketData() {
-  document.getElementById("marketKospi").textContent = KOSPI_SNAPSHOT.value;
   document.getElementById("marketRate").textContent = BASE_RATE_SNAPSHOT.value;
   document.getElementById("marketNote").textContent =
-    `코스피 ${KOSPI_SNAPSHOT.asOf} 종가 · 기준금리 ${BASE_RATE_SNAPSHOT.asOf} 기준 (실시간 아님) · 환율만 실시간 조회`;
+    `기준금리 ${BASE_RATE_SNAPSHOT.asOf} 기준 (실시간 아님) · 코스피·환율은 실시간 조회`;
+
+  try {
+    const res = await fetch("/api/kospi");
+    const data = await res.json();
+    if (!res.ok || !data.price) throw new Error(data.error || "조회 실패");
+    const diff = data.price - data.prevClose;
+    const status = diff >= 0 ? "good" : "critical";
+    const arrow = diff >= 0 ? "▲" : "▼";
+    document.getElementById("marketKospi").innerHTML =
+      `${data.price.toLocaleString("ko-KR", { maximumFractionDigits: 2 })} <span class="badge badge-${status}" style="margin-left:4px;">${arrow} ${Math.abs(diff).toFixed(2)}</span>`;
+  } catch {
+    document.getElementById("marketKospi").textContent = "조회 실패";
+  }
+
   try {
     const res = await fetch("https://open.er-api.com/v6/latest/USD");
     const data = await res.json();
