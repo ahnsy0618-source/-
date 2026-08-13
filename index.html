@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>실적집계 대시보드 (프로토타입)</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <h1>실적집계 대시보드</h1>
+    <p class="subtitle">부서별 실적 파일을 올리면 자동으로 취합해서 보여줍니다 · 프로토타입</p>
+  </header>
+
+  <section class="card">
+    <div id="dropZone" class="dropzone">
+      <p class="dropzone-text">엑셀(.xlsx, .xls) / CSV 파일을 여기로 끌어다 놓거나 클릭해서 선택하세요</p>
+      <p class="dropzone-hint">여러 부서 파일을 한 번에 올려도 됩니다</p>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple hidden />
+    </div>
+    <div class="controls">
+      <button id="sampleBtn" type="button" class="btn btn-secondary">샘플 데이터로 보기</button>
+      <button id="resetBtn" type="button" class="btn btn-ghost">초기화</button>
+    </div>
+    <p id="status" class="status">아직 업로드된 데이터가 없습니다.</p>
+  </section>
+
+  <section class="card">
+    <h2 class="card-title">업로드된 파일</h2>
+    <ul id="fileList" class="file-list"></ul>
+  </section>
+
+  <section class="card">
+    <h2 class="card-title">취합 결과</h2>
+    <p class="card-hint">첫 번째 열을 기준으로 그룹핑하고, 숫자 열은 합계로 취합합니다.</p>
+    <div id="resultTable" class="table-wrap">
+      <p class="empty">표시할 데이터가 없습니다.</p>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>
