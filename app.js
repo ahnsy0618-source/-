@@ -365,4 +365,58 @@ function renderAll() {
   renderYear();
 }
 
+// 코스피/기준금리는 브라우저에서 직접 붙일 수 있는 무료 CORS API가 없어서 "기준일" 있는 참고값으로 고정.
+// 환율만 open.er-api.com(CORS 허용)으로 실시간 조회.
+const KOSPI_SNAPSHOT = { value: "6,257.45", asOf: "2026-08-03" };
+const BASE_RATE_SNAPSHOT = { value: "2.75%", asOf: "2026-07-16 결정" };
+
+async function loadMarketData() {
+  document.getElementById("marketKospi").textContent = KOSPI_SNAPSHOT.value;
+  document.getElementById("marketRate").textContent = BASE_RATE_SNAPSHOT.value;
+  document.getElementById("marketNote").textContent =
+    `코스피 ${KOSPI_SNAPSHOT.asOf} 종가 · 기준금리 ${BASE_RATE_SNAPSHOT.asOf} 기준 (실시간 아님) · 환율만 실시간 조회`;
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    const data = await res.json();
+    const krw = data?.rates?.KRW;
+    document.getElementById("marketFx").textContent = krw ? `${formatNumber(krw)}원` : "-";
+  } catch {
+    document.getElementById("marketFx").textContent = "조회 실패";
+  }
+}
+
+// RSS2JSON이 XML 엔티티를 이미 인코딩된 채로 넘겨주는 경우가 있어, escapeHtml 전에 한 번 원복
+function decodeBasicEntities(s) {
+  return String(s)
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'");
+}
+
+async function loadNews() {
+  const listEl = document.getElementById("newsList");
+  try {
+    const rssUrl = encodeURIComponent("https://news.google.com/rss/search?q=삼성증권&hl=ko&gl=KR&ceid=KR:ko");
+    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+    const data = await res.json();
+    const items = (data.items || []).slice(0, 6);
+    listEl.innerHTML = items.length
+      ? items
+          .map(
+            (it) => `<div class="news-item">
+              <a href="${escapeHtml(it.link)}" target="_blank" rel="noopener">${escapeHtml(decodeBasicEntities(it.title))}</a>
+              <span class="news-date">${escapeHtml((it.pubDate || "").slice(0, 16))}</span>
+            </div>`
+          )
+          .join("")
+      : `<p class="empty">관련 뉴스가 없습니다.</p>`;
+  } catch {
+    listEl.innerHTML = `<p class="empty">뉴스를 불러오지 못했습니다.</p>`;
+  }
+}
+
 renderAll();
+loadMarketData();
+loadNews();

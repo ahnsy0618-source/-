@@ -8,69 +8,92 @@
 </head>
 <body>
 <div class="page">
+<div class="layout">
 
-  <header class="header">
-    <img class="brand-char" src="assets/mascot.png" alt="" aria-hidden="true" />
-    <div class="brand-text">
-      <p class="brand-name">삼성증권</p>
-      <p class="updated-line" id="updatedAt">불러오는 중…</p>
-    </div>
-  </header>
+  <div class="main-col">
 
-  <section class="stats-grid">
-    <div class="stat-tile stat-hero">
-      <p class="stat-label">이번 주 실적</p>
-      <p class="stat-value hero" id="statTodayValue">-</p>
-      <p class="stat-sub" id="statTodaySub">데이터 없음</p>
-    </div>
-    <div class="stats-row">
-      <div class="stat-tile">
-        <p class="stat-label">분기 달성률</p>
-        <p class="stat-value" id="statQuarterValue">-</p>
-        <p class="stat-sub" id="statQuarterSub">데이터 없음</p>
+    <header class="header">
+      <img class="brand-char" src="assets/mascot.png" alt="" aria-hidden="true" />
+      <div class="brand-text">
+        <p class="brand-name">삼성증권</p>
+        <p class="updated-line" id="updatedAt">불러오는 중…</p>
       </div>
-      <div class="stat-tile">
-        <p class="stat-label">연간 달성률</p>
-        <p class="stat-value" id="statYearValue">-</p>
-        <p class="stat-sub" id="statYearSub">데이터 없음</p>
+    </header>
+
+    <section class="stats-grid">
+      <div class="stat-tile stat-hero">
+        <p class="stat-label">이번 주 실적</p>
+        <p class="stat-value hero" id="statTodayValue">-</p>
+        <p class="stat-sub" id="statTodaySub">데이터 없음</p>
       </div>
-    </div>
-  </section>
+      <div class="stats-row">
+        <div class="stat-tile">
+          <p class="stat-label">분기 달성률</p>
+          <p class="stat-value" id="statQuarterValue">-</p>
+          <p class="stat-sub" id="statQuarterSub">데이터 없음</p>
+        </div>
+        <div class="stat-tile">
+          <p class="stat-label">연간 달성률</p>
+          <p class="stat-value" id="statYearValue">-</p>
+          <p class="stat-sub" id="statYearSub">데이터 없음</p>
+        </div>
+      </div>
+    </section>
 
-  <section class="card upload-card">
-    <div id="dropZone" class="dropzone">
-      <p class="dropzone-text">엑셀 / CSV 파일을 끌어다 놓거나 클릭해서 올리세요</p>
-      <p class="dropzone-hint">매주 월요일 오전 7시 기준 · 이번 주로 반영되고, 같은 주에 다시 올리면 덮어씁니다</p>
-      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple hidden />
-    </div>
-    <div class="controls">
-      <button id="sampleBtn" type="button" class="btn btn-primary">샘플 데이터로 보기</button>
-      <button id="resetBtn" type="button" class="btn btn-ghost">초기화</button>
-    </div>
-    <p id="status" class="status">아직 업로드된 데이터가 없습니다.</p>
-  </section>
+    <section class="card upload-card">
+      <div id="dropZone" class="dropzone">
+        <p class="dropzone-text">엑셀 / CSV 파일을 끌어다 놓거나 클릭해서 올리세요</p>
+        <p class="dropzone-hint">매주 월요일 오전 7시 기준 · 이번 주로 반영되고, 같은 주에 다시 올리면 덮어씁니다</p>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple hidden />
+      </div>
+      <div class="controls">
+        <button id="sampleBtn" type="button" class="btn btn-primary">샘플 데이터로 보기</button>
+        <button id="resetBtn" type="button" class="btn btn-ghost">초기화</button>
+      </div>
+      <p id="status" class="status">아직 업로드된 데이터가 없습니다.</p>
+    </section>
 
-  <nav class="tabs" id="tabs">
-    <button class="tab active" data-tab="today">이번 주</button>
-    <button class="tab" data-tab="quarter">분기</button>
-    <button class="tab" data-tab="year">연누적</button>
-  </nav>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="today">이번 주</button>
+      <button class="tab" data-tab="quarter">분기</button>
+      <button class="tab" data-tab="year">연누적</button>
+    </nav>
 
-  <section class="card panel" id="panel-today">
-    <p class="panel-label" id="todayLabel"></p>
-    <div id="todayList" class="dept-list"></div>
-  </section>
+    <section class="card panel" id="panel-today">
+      <p class="panel-label" id="todayLabel"></p>
+      <div id="todayList" class="dept-list"></div>
+    </section>
 
-  <section class="card panel" id="panel-quarter" hidden>
-    <p class="panel-label" id="quarterLabel"></p>
-    <div id="quarterList" class="dept-list"></div>
-  </section>
+    <section class="card panel" id="panel-quarter" hidden>
+      <p class="panel-label" id="quarterLabel"></p>
+      <div id="quarterList" class="dept-list"></div>
+    </section>
 
-  <section class="card panel" id="panel-year" hidden>
-    <p class="panel-label" id="yearLabel"></p>
-    <div id="yearList" class="dept-list"></div>
-  </section>
+    <section class="card panel" id="panel-year" hidden>
+      <p class="panel-label" id="yearLabel"></p>
+      <div id="yearList" class="dept-list"></div>
+    </section>
 
+  </div>
+
+  <aside class="side-col">
+    <section class="card market-card">
+      <h2 class="card-title">시장 지표</h2>
+      <div class="market-list">
+        <div class="market-item"><span class="market-label">코스피</span><span class="market-value" id="marketKospi">-</span></div>
+        <div class="market-item"><span class="market-label">환율(USD/KRW)</span><span class="market-value" id="marketFx">불러오는 중…</span></div>
+        <div class="market-item"><span class="market-label">기준금리</span><span class="market-value" id="marketRate">-</span></div>
+      </div>
+      <p class="market-note" id="marketNote"></p>
+    </section>
+
+    <section class="card news-card">
+      <h2 class="card-title">관련 뉴스</h2>
+      <div id="newsList" class="news-list"><p class="empty">불러오는 중…</p></div>
+    </section>
+  </aside>
+
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
