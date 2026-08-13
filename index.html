@@ -40,19 +40,6 @@
       </div>
     </section>
 
-    <section class="card upload-card">
-      <div id="dropZone" class="dropzone">
-        <p class="dropzone-text">엑셀 / CSV 파일을 끌어다 놓거나 클릭해서 올리세요</p>
-        <p class="dropzone-hint">매주 월요일 오전 7시 기준 · 이번 주로 반영되고, 같은 주에 다시 올리면 덮어씁니다</p>
-        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple hidden />
-      </div>
-      <div class="controls">
-        <button id="sampleBtn" type="button" class="btn btn-primary">샘플 데이터로 보기</button>
-        <button id="resetBtn" type="button" class="btn btn-ghost">초기화</button>
-      </div>
-      <p id="status" class="status">아직 업로드된 데이터가 없습니다.</p>
-    </section>
-
     <nav class="tabs" id="tabs">
       <button class="tab active" data-tab="today">이번 주</button>
       <button class="tab" data-tab="quarter">분기</button>
@@ -72,6 +59,19 @@
     <section class="card panel" id="panel-year" hidden>
       <p class="panel-label" id="yearLabel"></p>
       <div id="yearList" class="dept-list"></div>
+    </section>
+
+    <section class="card upload-card">
+      <div id="dropZone" class="dropzone">
+        <p class="dropzone-text">엑셀 / CSV 파일을 끌어다 놓거나 클릭해서 올리세요</p>
+        <p class="dropzone-hint">매주 월요일 오전 7시 기준 · 이번 주로 반영되고, 같은 주에 다시 올리면 덮어씁니다</p>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple hidden />
+      </div>
+      <div class="controls">
+        <button id="sampleBtn" type="button" class="btn btn-primary">샘플 데이터로 보기</button>
+        <button id="resetBtn" type="button" class="btn btn-ghost">초기화</button>
+      </div>
+      <p id="status" class="status">아직 업로드된 데이터가 없습니다.</p>
     </section>
 
   </div>
