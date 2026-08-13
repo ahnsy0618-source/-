@@ -10,25 +10,30 @@
 <div class="page">
 
   <header class="header">
-    <p class="eyebrow">삼성증권</p>
-    <h1 id="updatedAt">불러오는 중…</h1>
+    <img class="brand-char" src="assets/mascot.jpg" alt="" aria-hidden="true" />
+    <div class="brand-text">
+      <p class="brand-name">삼성증권</p>
+      <p class="updated-line" id="updatedAt">불러오는 중…</p>
+    </div>
   </header>
 
   <section class="stats-grid">
-    <div class="stat-tile">
+    <div class="stat-tile stat-hero">
       <p class="stat-label">이번 주 실적</p>
-      <p class="stat-value" id="statTodayValue">-</p>
+      <p class="stat-value hero" id="statTodayValue">-</p>
       <p class="stat-sub" id="statTodaySub">데이터 없음</p>
     </div>
-    <div class="stat-tile">
-      <p class="stat-label">분기 달성률</p>
-      <p class="stat-value" id="statQuarterValue">-</p>
-      <p class="stat-sub" id="statQuarterSub">데이터 없음</p>
-    </div>
-    <div class="stat-tile">
-      <p class="stat-label">연간 달성률</p>
-      <p class="stat-value" id="statYearValue">-</p>
-      <p class="stat-sub" id="statYearSub">데이터 없음</p>
+    <div class="stats-row">
+      <div class="stat-tile">
+        <p class="stat-label">분기 달성률</p>
+        <p class="stat-value" id="statQuarterValue">-</p>
+        <p class="stat-sub" id="statQuarterSub">데이터 없음</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-label">연간 달성률</p>
+        <p class="stat-value" id="statYearValue">-</p>
+        <p class="stat-sub" id="statYearSub">데이터 없음</p>
+      </div>
     </div>
   </section>
 
