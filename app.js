@@ -342,22 +342,60 @@ function renderYear() {
 
   const list = byDept.length
     ? byDept
-        .map((r) => {
+        .map((r, i) => {
           const diff = Math.round(r.curQtd - r.prevVal);
           return `<div class="dept-row">
             <div class="dept-row-head"><span class="dept-name">${escapeHtml(r.부서)}</span><span class="dept-value">${formatNumber(r.actual)}<span class="unit">억원</span></span></div>
             ${meterHtml(r.actual, r.target)}
             <div class="dept-row-foot">${badgeHtml(`${pct(r.actual, r.target)}%`, r.actual >= r.target)}<span class="dept-target">전분기 ${formatNumber(r.prevVal)}억 · ${badgeHtml((diff >= 0 ? "+" : "") + formatNumber(diff), diff >= 0)}</span></div>
+            <button class="ai-draft-btn" type="button" data-idx="${i}">AI 기획방안 초안 생성</button>
+            <div class="ai-draft" id="ai-draft-${i}" hidden></div>
           </div>`;
         })
         .join("")
     : `<p class="empty">표시할 데이터가 없습니다.</p>`;
 
   document.getElementById("yearList").innerHTML = list;
+  bindAiDraftButtons(byDept);
   document.getElementById("statYearValue").textContent = byDept.length ? `${pct(totalActual, totalTarget)}%` : "-";
   document.getElementById("statYearSub").textContent = byDept.length
     ? `${formatNumber(totalActual)}억 / 진행목표 ${formatNumber(totalTarget)}억`
     : "데이터 없음";
+}
+
+function bindAiDraftButtons(byDept) {
+  document.querySelectorAll(".ai-draft-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const r = byDept[Number(btn.dataset.idx)];
+      const resultEl = document.getElementById(`ai-draft-${btn.dataset.idx}`);
+      btn.disabled = true;
+      btn.textContent = "생성 중…";
+      resultEl.hidden = false;
+      resultEl.innerHTML = `<p class="empty">AI가 초안을 작성하고 있습니다…</p>`;
+      try {
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            부서: r.부서,
+            actual: Math.round(r.actual),
+            target: Math.round(r.target),
+            achievementPct: pct(r.actual, r.target),
+            prevVal: Math.round(r.prevVal),
+            diff: Math.round(r.curQtd - r.prevVal),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "생성 실패");
+        resultEl.innerHTML = `<div class="ai-draft-body">${escapeHtml(data.text).replace(/\n/g, "<br>")}</div>`;
+      } catch (err) {
+        resultEl.innerHTML = `<p class="empty">초안 생성에 실패했습니다: ${escapeHtml(err.message)}</p>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "AI 기획방안 초안 생성";
+      }
+    });
+  });
 }
 
 function renderAll() {
