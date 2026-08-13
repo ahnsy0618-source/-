@@ -1,7 +1,9 @@
 const HISTORY_KEY = "perf.history";
 
-// 분기목표 총합(약 3,850억원)은 삼성증권이 실제 공시한 분기 순영업수익 규모(약 3,900억원대)에 맞춰 스케일만 anchoring함.
-// 부문별 배분·실제 실적치는 내부 비공개 자료라 확인할 수 없어 임의로 만든 값 — 실데이터 확보 시 교체 필요.
+// 이 대시보드의 "실적(억원)"은 부문 펀더멘털 평가에 쓰이는 부문별 순영업이익 기준.
+// (당기순이익은 세금 등이 낀 회사 전체 지표라 부문별로 나누지 않음 — 필요하면 사이드바에 회사 전체 지표로 별도 추가)
+// 분기목표 총합(약 3,850억원)은 실제 공시 규모에 맞춘 근사치일 뿐, 부문별 배분·실제 실적치는
+// 내부 비공개 자료라 확인할 수 없어 임의로 만든 값 — 실데이터 확보 시 교체 필요.
 const DEPT_TARGETS = {
   "WM부문 1본부": { 분기목표: 650, 연목표: 2600 },
   "WM부문 2본부": { 분기목표: 550, 연목표: 2200 },
@@ -13,7 +15,7 @@ const DEPT_TARGETS = {
   "IB2부문": { 분기목표: 400, 연목표: 1600 },
 };
 
-// 부서별 과거 실적(억원): 1분기 총, 2분기 총, 7월 총, 8월 주간(월요일 기준, 최근주 포함) — 샘플 데모용
+// 부서별 과거 순영업이익(억원): 1분기 총, 2분기 총, 7월 총, 8월 주간(월요일 기준, 최근주 포함) — 샘플 데모용
 const DEPT_HISTORY_SEED = {
   "WM부문 1본부": { q1: 635, q2: 655, jul: 215, weeks: [["2026-08-03", 62], ["2026-08-10", 67]] },
   "WM부문 2본부": { q1: 540, q2: 565, jul: 180, weeks: [["2026-08-03", 52], ["2026-08-10", 56]] },
@@ -274,7 +276,7 @@ function renderToday() {
   const latest = latestDate();
   const label = latest || todayStr();
   document.getElementById("todayLabel").textContent = latest
-    ? `${latest}(월) 기준 · 이번 주 실적`
+    ? `${latest}(월) 기준 · 이번 주 순영업이익`
     : "아직 입력된 데이터가 없습니다";
 
   const rows = state.history.filter((r) => r.날짜 === latest);
@@ -322,7 +324,7 @@ function renderYear() {
   const yearEnd = `${year}-12-31`;
   const yearPaceRatio = Math.min(daysInclusive(yearStart, today) / daysInclusive(yearStart, yearEnd), 1);
   document.getElementById("yearLabel").textContent =
-    `${yearStart} ~ ${today} 누적 · 목표는 연 진행률(${Math.round(yearPaceRatio * 100)}%)에 맞춰 보정된 값 · 전분기대비 = 이번 분기(진행중) 누적 vs ${prev.year}년 ${prev.q}분기 전체 실적`;
+    `${yearStart} ~ ${today} 누적 · 목표는 연 진행률(${Math.round(yearPaceRatio * 100)}%)에 맞춰 보정된 값 · 전분기대비 = 이번 분기(진행중) 누적 vs ${prev.year}년 ${prev.q}분기 전체 순영업이익`;
 
   const ytdRows = state.history.filter((r) => r.날짜.slice(0, 4) === String(year) && r.날짜 <= today);
   const curQtdByDept = sumByDept(state.history.filter((r) => r.날짜 >= curBounds.start && r.날짜 <= curBounds.end));
